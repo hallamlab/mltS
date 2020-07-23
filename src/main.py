@@ -1,7 +1,7 @@
 __author__ = "Abdurrahman M. A. Basher"
 __date__ = '20/04/2020'
 __copyright__ = "Copyright 2020, The Hallam Lab"
-__license__ = "GPL"
+__license__ = "GPL v3"
 __version__ = "1.0"
 __maintainer__ = "Abdurrahman M. A. Basher"
 __email__ = "ar.basher@alumni.ubc.ca"

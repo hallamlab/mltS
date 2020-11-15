@@ -1,10 +1,10 @@
-__author__ = "Abdur Rahman M. A. Basher"
-__date__ = '03/08/2020'
+__author__ = "Abdurrahman M. A. Basher"
+__date__ = '20/04/2020'
 __copyright__ = "Copyright 2020, The Hallam Lab"
-__license__ = "GPL v3"
+__license__ = "GPL"
 __version__ = "1.0"
-__maintainer__ = "Abdur Rahman M. A. Basher"
-__email__ = "arbasher@alumni.ubc.ca"
+__maintainer__ = "Abdurrahman M. A. Basher"
+__email__ = "ar.basher@alumni.ubc.ca"
 __status__ = "Production"
 __description__ = "This file is the main entry to perform learning and prediction on dataset using mltS model."
 
@@ -88,7 +88,7 @@ def __internal_args(parse_args):
     arg.dsname = parse_args.dsname
 
     ###***************************     Preprocessing arguments      ***************************###
-    
+
     arg.preprocess_dataset = parse_args.preprocess_dataset
     arg.test_size = parse_args.test_size
     if arg.test_size < 0 or arg.test_size > 1:
@@ -99,7 +99,7 @@ def __internal_args(parse_args):
     arg.cutting_point = parse_args.cutting_point
 
     ###***************************        Training arguments        ***************************###
-    
+
     arg.train = parse_args.train
     arg.train_labels = parse_args.train_labels
     arg.fit_intercept = parse_args.fit_intercept

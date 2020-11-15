@@ -361,11 +361,11 @@ def synthesize_report(X, sample_ids, y_pred, y_dict_ids, y_common_name, componen
     if y_pred_score is not None:
         results = parallel(delayed(__synthesize_report)(X[batch:batch + batch_size],
                                                         sample_ids[batch:batch +
-                                                                   batch_size],
+                                                                         batch_size],
                                                         y_pred_score[batch:batch +
-                                                                     batch_size],
+                                                                           batch_size],
                                                         y_pred[batch:batch +
-                                                               batch_size],
+                                                                     batch_size],
                                                         y_dict_ids, y_common_name, component_dict,
                                                         labels_components, main_folder_path, batch_idx,
                                                         len(list_batches))
@@ -373,9 +373,9 @@ def synthesize_report(X, sample_ids, y_pred, y_dict_ids, y_common_name, componen
     else:
         results = parallel(delayed(__synthesize_report)(X[batch:batch + batch_size],
                                                         sample_ids[batch:batch +
-                                                                   batch_size],
+                                                                         batch_size],
                                                         y_pred_score, y_pred[batch:batch +
-                                                                             batch_size],
+                                                                                   batch_size],
                                                         y_dict_ids, y_common_name, component_dict,
                                                         labels_components, main_folder_path, batch_idx,
                                                         len(list_batches))
@@ -443,6 +443,8 @@ def score(y_true, y_pred, item_lst, six_db=False, A=1, B=1, C=1, top_k=150, mode
     if six_db:
         item_lst = ['AraCyc', 'EcoCyc', 'HumanCyc',
                     'LeishCyc', 'TrypanoCyc', 'YeastCyc']
+        if y_true.shape[0] == 4:
+            item_lst = ['AraCyc', 'EcoCyc', 'HumanCyc', 'YeastCyc']
         idx_lst = [idx for idx in np.arange(len(item_lst))]
     print('\t>> Scores are saved to {0:s}...'.format(str(file_name)))
     for i, idx in enumerate(idx_lst):

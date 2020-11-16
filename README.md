@@ -44,9 +44,9 @@ Please download the following files from [Zenodo](https://zenodo.org/).
     - "biocyc21_Xe.pkl": BioCyc (v21 tier 2 \& 3) dataset of size (9429, 3778).
     - "biocyc21_y.pkl": BioCyc (v21 tier 2 \& 3) dataset of size (9429, 2526).
     - "mltS.pkl": a pretrained model using "biocyc21_Xe.pkl" and "biocyc21_y.pkl". This model was trained using the default settings.
-    - "mltS_omega.pkl": a pretrained model using "biocyc21_Xe.pkl" and "biocyc21_y.pkl". This model was trained using the default settings.
-    - "mltS_disc.pkl": a pretrained model using "biocyc21_Xe.pkl" and "biocyc21_y.pkl". This model was trained using the default settings.
-    - "mltS_confidence.pkl": a pretrained model using "biocyc21_Xe.pkl" and "biocyc21_y.pkl". This model was trained using the default settings.
+    - "mltS_omega.pkl": the source specific weights for "mltS.pkl". 
+    - "mltS_disc.pkl": the discrepancy table for "mltS.pkl". 
+    - "mltS_confidence.pkl": the relaibaility scores for "mltS.pkl".
 
 ## Installation and Basic Usage
 Run the following commands to clone the repository to an appropriate location:

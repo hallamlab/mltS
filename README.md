@@ -55,7 +55,8 @@ Run the following commands to clone the repository to an appropriate location:
 
 For all experiments, navigate to ``src`` folder then run the commands of your choice. For example, to display *mltS*"s running options use: `python main.py --help`. It should be self-contained.
 
-## Preprocessing
+[TO BE ADDED]
+<!--## Preprocessing
 If you have external features (e.g. "pathway2vec_embeddings.npz") with graph file (e.g. "hin.pkl"), then you may wish to execute the following command to preprocess "cami" data (as an example); otherwise, skip this step:
 
 ``python main.py --preprocess-dataset --cutting-point 3650 --object-name "biocyc.pkl" --pathway2ec-name "pathway2ec.pkl" --pathway2ec-idx-name "pathway2ec_idx.pkl" --hin-name "hin.pkl" --features-name "pathway2vec_embeddings.npz" --X-name "cami_X.pkl" --file-name "cami" --ospath "[path to the object files (e.g. 'biocyc.pkl')]" --dspath "[path to dataset and to store results]" --batch 50 --num-jobs 2``
@@ -151,7 +152,7 @@ To predict bags from a dataset using already trained model ("mltS.pkl") with **s
 
 For **pref-rank** prediction strategy, run the following:
 
-``python main.py --predict --pred-bags --pref-rank --binarize --use-external-features --cutting-point 3650 --top-k-rank 100 --X-name "cami_Xe.pkl" --file-name "mltS" --model-name "mltS" --dspath "[path to the dataset and to store predicted results]" --mdpath "[path to the pretrained model "mltS.pkl"]" --batch 50 --num-jobs 2``
+``python main.py --predict --pred-bags --pref-rank --binarize --use-external-features --cutting-point 3650 --top-k-rank 100 --X-name "cami_Xe.pkl" --file-name "mltS" --model-name "mltS" --dspath "[path to the dataset and to store predicted results]" --mdpath "[path to the pretrained model "mltS.pkl"]" --batch 50 --num-jobs 2``-->
 
 ## Citing
 If you find *mltS* useful in your research, please consider citing the following paper:

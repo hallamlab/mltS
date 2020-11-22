@@ -244,7 +244,7 @@ def parse_command_line():
     parser.add_argument('--hin-name', type=str, default='hin.pkl',
                         help='The hin file name. (default value: "hin.pkl")')
     parser.add_argument('--pi-name', type=str, default='trans_prob.pkl',
-                        help='The pi file name. (default value: "trans_prob.pkl")')
+                        help='The pi file name to construct transition probability matrix. (default value: "trans_prob.pkl")')
     parser.add_argument('--X-name', type=str, default='biocyc21_tier3_9392_Xe.pkl',
                         help='The X file name. (default value: "biocyc21_tier3_9392_Xe.pkl")')
     parser.add_argument("--y-name", nargs="+", type=str, default=["biocyc21_tier3_9392_y.pkl",

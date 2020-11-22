@@ -40,10 +40,8 @@ def __build_features(X, pathwat_dict, ec_dict, labels_components, node2idx_pathw
     abd = preprocessing.normalize(abd)
     print('\t>> Use pathway2vec EC features...')
     path2vec_features = path2vec_features[path2vec_features.files[0]]
-    path2vec_features = path2vec_features / \
-                        np.linalg.norm(path2vec_features, axis=1)[:, np.newaxis]
-    ec_features = [idx for idx,
-                           v in ec_dict.items() if v in node2idx_pathway2ec]
+    path2vec_features = path2vec_features / np.linalg.norm(path2vec_features, axis=1)[:, np.newaxis]
+    ec_features = [idx for idx, v in ec_dict.items() if v in node2idx_pathway2ec]
     path2vec_features = path2vec_features[ec_features, :]
     ec_features = [np.mean(path2vec_features[row.rows[0]] * np.array(row.data[0])[:, None], axis=0)
                    for idx, row in enumerate(X)]
@@ -89,51 +87,44 @@ def __train(arg):
         print('\n{0})- Preprocess dataset...'.format(steps))
         steps = steps + 1
         print('\t>> Loading files...')
-        X = load_data(file_name=arg.X_name,
-                      load_path=arg.dspath, tag="instances")
+        X = load_data(file_name=arg.X_name, load_path=arg.dspath, tag="instances")
         X = X[:, :arg.cutting_point]
 
         # load a biocyc file
-        data_object = load_data(file_name=arg.object_name,
-                                load_path=arg.ospath, tag='the biocyc object')
+        data_object = load_data(file_name=arg.object_name, load_path=arg.ospath, tag='the biocyc object')
         ec_dict = data_object["ec_id"]
         pathway_dict = data_object["pathway_id"]
         del data_object
+
         pathway_dict = dict((idx, id) for id, idx in pathway_dict.items())
         ec_dict = dict((idx, id) for id, idx in ec_dict.items())
-        labels_components = load_data(
-            file_name=arg.pathway2ec_name, load_path=arg.ospath, tag='M')
+        labels_components = load_data(file_name=arg.pathway2ec_name, load_path=arg.ospath, tag='M')
         print('\t>> Loading label to component mapping file object...')
-        pathway2ec_idx = load_data(
-            file_name=arg.pathway2ec_idx_name, load_path=arg.ospath, print_tag=False)
+        pathway2ec_idx = load_data(file_name=arg.pathway2ec_idx_name, load_path=arg.ospath, print_tag=False)
         pathway2ec_idx = list(pathway2ec_idx)
         tmp = list(ec_dict.keys())
-        ec_dict = dict((idx, ec_dict[tmp.index(ec)])
-                       for idx, ec in enumerate(pathway2ec_idx))
+        ec_dict = dict((idx, ec_dict[tmp.index(ec)]) for idx, ec in enumerate(pathway2ec_idx))
 
         # load path2vec features
-        path2vec_features = np.load(
-            file=os.path.join(arg.mdpath, arg.features_name))
+        path2vec_features = np.load(file=os.path.join(arg.ospath, arg.features_name))
 
         # load a hin file
-        hin = load_data(file_name=arg.hin_name, load_path=arg.ospath,
-                        tag='heterogeneous information network')
+        hin = load_data(file_name=arg.hin_name, load_path=arg.ospath, tag='heterogeneous information network')
         # get pathway2ec mapping
         node2idx_pathway2ec = [node[0] for node in hin.nodes(data=True)]
         del hin
 
-        pi = load_data(file_name=arg.pi_name, load_path=arg.ospath,
-                       tag='the hin distribution object')
-        tmp_ecs = [node[1]['mapped_idx'] for node in pi.nodes(data=True) if
-                   node[1]['idx'] in ec_dict and node[1]['type'] == 'E']
-        tmp_pathways = [node[1]['mapped_idx']
-                        for node in pi.nodes(data=True) if node[1]['type'] == 'T']
+        # build transition probability
+        pi = load_data(file_name=arg.pi_name, load_path=arg.ospath, tag='the hin distribution object')
+        tmp_ecs = [node[1]['mapped_idx'] for node in pi.nodes(data=True) if node[1]['idx'] in ec_dict and node[1]['type'] == 'E']
+        tmp_pathways = [node[1]['mapped_idx'] for node in pi.nodes(data=True) if node[1]['type'] == 'T']
         trans_idx = np.array(tmp_ecs + tmp_pathways)
         pi = pi.trans_prob[trans_idx[:, None], trans_idx]
         pi = pi / pi.sum(1)
         np.nan_to_num(pi, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
         save_data(data=lil_matrix(pi), file_name="trans_prob.pkl", save_path=arg.ospath, mode="wb",
                   tag="transition probability")
+        
         __build_features(X=X, pathwat_dict=pathway_dict, ec_dict=ec_dict, labels_components=labels_components,
                          node2idx_pathway2ec=node2idx_pathway2ec, path2vec_features=path2vec_features,
                          file_name=arg.file_name, dspath=arg.dspath, batch_size=arg.batch, num_jobs=arg.num_jobs)

@@ -2,15 +2,14 @@
 This file preprocesses the input data in PathoLogic File Format (.pf).
 '''
 
+import numpy as np
 import os
 import os.path
 import shutil
 import sys
 from collections import OrderedDict
-
-import numpy as np
+from joblib import Parallel, delayed
 from scipy.sparse import lil_matrix
-from sklearn.utils._joblib import Parallel, delayed
 
 
 def create_remove_dir(folder_path):

@@ -1,5 +1,5 @@
 __author__ = "Abdurrahman M. A. Basher"
-__date__ = '20/04/2020'
+__date__ = '21/11/2020'
 __copyright__ = "Copyright 2020, The Hallam Lab"
 __license__ = "GPL"
 __version__ = "1.0"
@@ -197,25 +197,20 @@ def parse_command_line():
     parser = ArgumentParser(description="Run mltS.")
 
     ###***************************         Global arguments         ***************************###
-    parser.add_argument('--display-interval', type=int, default=2,
-                        help='display intervals. -1 means display per each iteration. (default value: 2).')
-    parser.add_argument('--random_state', type=int, default=12345,
-                        help='Random seed. (default value: 12345).')
-    parser.add_argument('--num-jobs', type=int, default=1,
-                        help='Number of parallel workers. (default value: 2).')
-    parser.add_argument('--num-models', type=int, default=3,
-                        help='Number of models to generate. (default value: 3).')
-    parser.add_argument('--batch', type=int, default=30,
-                        help='Batch size. (default value: 30).')
-    parser.add_argument('--max-inner-iter', type=int, default=10,
-                        help='Number of inner iteration for logistic regression. '
-                             '10. (default value: 10)')
-    parser.add_argument('--num-epochs', type=int, default=2,
+    parser.add_argument('--display-interval', default=1, type=int,
+                        help='display intervals. -1 means display per each iteration. (default value: 1).')
+    parser.add_argument('--random_state', default=12345, type=int, help='Random seed. (default value: 12345).')
+    parser.add_argument('--num-jobs', type=int, default=2, help='Number of parallel workers. (default value: 2).')
+    parser.add_argument('--num-models', default=3, type=int, help='Number of models to generate. (default value: 3).')
+    parser.add_argument('--batch', type=int, default=30, help='Batch size. (default value: 30).')
+    parser.add_argument('--max-inner-iter', default=15, type=int,
+                        help='Number of inner iteration for logistic regression. (default value: 15)')
+    parser.add_argument('--num-epochs', type=int, default=3,
                         help='Number of epochs over the training set. (default value: 3).')
     parser.add_argument('--shuffle', action='store_false', default=True,
                         help='Whether or not the training data should be shuffled after each epoch. '
                              '(default value: True).')
-
+    
     ###***************************          Path arguments          ***************************###
     parser.add_argument('--ospath', type=str, default=fph.OBJECT_PATH,
                         help='The path to the data object that contains extracted '
@@ -234,7 +229,7 @@ def parse_command_line():
                         help='The result folder name. The default is set to Prediction_mltS.')
     parser.add_argument('--logpath', type=str, default=fph.LOG_PATH,
                         help='The path to the log directory.')
-
+    
     ###***************************          File arguments          ***************************###
     parser.add_argument('--object-name', type=str, default='biocyc.pkl',
                         help='The biocyc file name. (default value: "biocyc.pkl")')
@@ -242,31 +237,32 @@ def parse_command_line():
                         help='The pathway2ec association matrix file name. (default value: "pathway2ec.pkl")')
     parser.add_argument('--pathway2ec-idx-name', type=str, default='pathway2ec_idx.pkl',
                         help='The pathway2ec association indices file name. (default value: "pathway2ec_idx.pkl")')
-    parser.add_argument('--features-name', type=str, default='path2vec_cmt_tf_embeddings.npz',
-                        help='The features file name. (default value: "path2vec_cmt_tf_embeddings.npz")')
+    parser.add_argument('--features-name', type=str, default='path2vec_embeddings.npz',
+                        help='The features file name. (default value: "path2vec_embeddings.npz")')
     parser.add_argument('--centroids', type=str, default='biocyc_bag_centroid.npz',
                         help='The bags centroids file name. (default value: "biocyc_bag_centroid.npz")')
-    parser.add_argument('--hin-name', type=str, default='hin_cmt.pkl',
-                        help='The hin file name. (default value: "hin_cmt.pkl")')
+    parser.add_argument('--hin-name', type=str, default='hin.pkl',
+                        help='The hin file name. (default value: "hin.pkl")')
     parser.add_argument('--pi-name', type=str, default='trans_prob.pkl',
                         help='The pi file name. (default value: "trans_prob.pkl")')
-    parser.add_argument('--X-name', type=str, default='biocyc205_tier23_9255_Xe.pkl',
-                        help='The X file name. (default value: "biocyc205_tier23_9255_Xe.pkl")')
-    parser.add_argument("--y-name", nargs="+", type=str, default=["biocyc205_tier23_9255_y.pkl",
-                                                                  "biocyc205_tier23_9255_mllr_y.pkl",
-                                                                  "biocyc205_tier23_9255_triumpf_y.pkl",
-                                                                  "biocyc205_tier23_9255_leads_y.pkl"],
-                        help="The y file name. (default value: ['biocyc205_tier23_9255_y.pkl', "
-                             "'biocyc205_tier23_9255_mllr_y.pkl', 'biocyc205_tier23_9255_triumpf_y.pkl', "
-                             "'biocyc205_tier23_9255_leads_y.pkl']).")
-    parser.add_argument("--source-name", nargs="+", type=str, default=['pathologic', 'mllr', 'triumpf', 'leads'],
-                        help="The y source name. (default value: ['pathologic', 'mllr', 'triumpf', 'leads']).")
-    parser.add_argument('--X-trust-name', type=str, default='golden_Xe.pkl',
-                        help='The X trusted file name. (default value: "golden_Xe.pkl")')
-    parser.add_argument('--y-trust-name', type=str, default='golden_y.pkl',
-                        help='The y trusted file name. (default value: "golden_y.pkl")')
-    parser.add_argument('--yB-name', type=str, default='reMap_3_B_pred.pkl',
-                        help='The bags file name. (default value: "reMap_3_B_pred.pkl")')
+    parser.add_argument('--X-name', type=str, default='biocyc21_tier3_9392_Xe.pkl',
+                        help='The X file name. (default value: "biocyc21_tier3_9392_Xe.pkl")')
+    parser.add_argument("--y-name", nargs="+", type=str, default=["biocyc21_tier3_9392_y.pkl",
+                                                                  "biocyc21_tier3_9392_minpath_y.pkl",
+                                                                  "biocyc21_tier3_9392_mllr_y.pkl",
+                                                                  "biocyc21_tier3_9392_triumpf_y.pkl",
+                                                                  "biocyc21_tier3_9392_pp_leads_y.pkl"],
+                        help="The y file name. (default value: ['biocyc21_tier3_9392_y.pkl', "
+                             "'biocyc21_tier3_9392_minpath_y.pkl', 'biocyc21_tier3_9392_mllr_y.pkl', "
+                             "'biocyc21_tier3_9392_triumpf_y.pkl', 'biocyc21_tier3_9392_pp_leads_y.pkl']).")
+    parser.add_argument("--source-name", nargs="+", type=str, default=['pathologic', 'minpath', 'mllr', 'triumpf', 'leads'],
+                        help="The y source name. (default value: ['pathologic', 'minpath', 'mllr', 'triumpf', 'leads']).") 
+    parser.add_argument('--X-trust-name', type=str, default='biocyc21_tier12_41_Xe.pkl',
+                        help='The X trusted file name. (default value: "biocyc21_tier12_41_Xe.pkl")')
+    parser.add_argument('--y-trust-name', type=str, default='biocyc21_tier12_41_y.pkl',
+                        help='The y trusted file name. (default value: "biocyc21_tier12_41_y.pkl")')
+    parser.add_argument('--yB-name', type=str, default='biocyc21_tier3_9392_yB.pkl',
+                        help='The bags file name. (default value: "biocyc21_tier3_9392_yB.pkl")')
     parser.add_argument('--samples-ids', type=str, default='mltS_samples.pkl',
                         help='The samples ids file name. (default value: "mltS_samples.pkl")')
     parser.add_argument('--bags-labels', type=str, default='biocyc_bag_pathway.pkl',
@@ -314,7 +310,7 @@ def parse_command_line():
     parser.add_argument('--ssample-label-size', type=int, default=50,
                         help='Maximum number of labels to be sampled. (default value: 50).')
     parser.add_argument('--calc-subsample-size', type=int, default=50,
-                        help='Compute loss on selected samples. (default value: 50).')
+                        help='Compute loss over selected samples. (default value: 50).')
     parser.add_argument("--calc-label-cost", action='store_false', default=True,
                         help="Compute label cost, i.e., cost of labels. (default value: True).")
     parser.add_argument("--calc-bag-cost", action='store_true', default=False,
@@ -347,10 +343,10 @@ def parse_command_line():
                         help='The chosen model type. (default value: "factorize")')
     parser.add_argument('--ads-percent', type=float, default=0.3,
                         help='Active dataset subsampling size (in percentage). (default value: 0.3).')
-    parser.add_argument('--acquisition-type', type=str, default='entropy',
+    parser.add_argument('--acquisition-type', type=str, default='psp',
                         choices=['entropy', 'mutual', 'variation', 'psp'],
                         help='The acquisition function for estimating the predictive uncertainty. '
-                             '(default value: "entropy")')
+                             '(default value: "psp")')
     parser.add_argument('--top-k', type=int, default=3,
                         help='Top k labels to be considered for calculating the model '
                              'for variation ratio acquisition function. (default value: 3).')
@@ -479,5 +475,4 @@ def parse_command_line():
 
 
 if __name__ == "__main__":
-    # app.run(parse_command_line)
     parse_command_line()

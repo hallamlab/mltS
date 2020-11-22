@@ -12,9 +12,10 @@ import numpy as np
 from model.mlts import mltS
 from scipy.sparse import lil_matrix, hstack
 from sklearn import preprocessing
-from sklearn.utils._joblib import Parallel, delayed
+from joblib import Parallel, delayed
 from utility.access_file import load_data, load_item_features, save_data
 from utility.model_utils import score, synthesize_report, compute_abd_cov
+from utility.parse_input import parse_files
 
 EPSILON = np.finfo(np.float32).eps
 
@@ -40,9 +41,9 @@ def __build_features(X, pathwat_dict, ec_dict, labels_components, node2idx_pathw
     print('\t>> Use pathway2vec EC features...')
     path2vec_features = path2vec_features[path2vec_features.files[0]]
     path2vec_features = path2vec_features / \
-        np.linalg.norm(path2vec_features, axis=1)[:, np.newaxis]
+                        np.linalg.norm(path2vec_features, axis=1)[:, np.newaxis]
     ec_features = [idx for idx,
-                   v in ec_dict.items() if v in node2idx_pathway2ec]
+                           v in ec_dict.items() if v in node2idx_pathway2ec]
     path2vec_features = path2vec_features[ec_features, :]
     ec_features = [np.mean(path2vec_features[row.rows[0]] * np.array(row.data[0])[:, None], axis=0)
                    for idx, row in enumerate(X)]
@@ -136,7 +137,7 @@ def __train(arg):
         __build_features(X=X, pathwat_dict=pathway_dict, ec_dict=ec_dict, labels_components=labels_components,
                          node2idx_pathway2ec=node2idx_pathway2ec, path2vec_features=path2vec_features,
                          file_name=arg.file_name, dspath=arg.dspath, batch_size=arg.batch, num_jobs=arg.num_jobs)
-
+        
     ##########################################################################################################
     ######################                       TRAIN USING mltS                       ######################
     ##########################################################################################################
@@ -190,8 +191,6 @@ def __train(arg):
                                 load_path=arg.dspath, tag="X_trust")
             y_trust = load_data(file_name=arg.y_trust_name,
                                 load_path=arg.dspath, tag="y_trust")
-            # X_trust = X_trust[:6]
-            # y_trust = y_trust[:6]
         pi = None
         if arg.apply_partial_label:
             if os.path.exists(os.path.join(arg.ospath, arg.pi_name)):
@@ -282,11 +281,6 @@ def __train(arg):
             else:
                 score(y_true=y.toarray(), y_pred=y_pred.toarray(), item_lst=[arg.dsname], six_db=False,
                       top_k=arg.psp_k, mode='a', file_name=file_name, save_path=arg.rspath)
-            # score(y_true=y.toarray(), y_pred=y_pred.toarray(), item_lst=[arg.dsname], six_db=False,
-            #   top_k=arg.psp_k, mode='a', file_name=file_name, save_path=arg.rspath)
-            # if arg.dsname == 'golden':
-            # score(y_true=y.toarray(), y_pred=y_pred.toarray(), item_lst=[arg.dsname], six_db=True,
-            #   top_k=arg.psp_k, mode='a', file_name=file_name, save_path=arg.rspath)
 
     ##########################################################################################################
     ######################                      PREDICT USING mltS                      ######################
@@ -308,15 +302,12 @@ def __train(arg):
             del data_object
             pathway_dict = dict((idx, id) for id, idx in pathway_dict.items())
             ec_dict = dict((idx, id) for id, idx in ec_dict.items())
-            labels_components = load_data(
-                file_name=arg.pathway2ec_name, load_path=arg.ospath, tag='M')
+            labels_components = load_data(file_name=arg.pathway2ec_name, load_path=arg.ospath, tag='M')
             print('\t>> Loading label to component mapping file object...')
-            pathway2ec_idx = load_data(
-                file_name=arg.pathway2ec_idx_name, load_path=arg.ospath, print_tag=False)
+            pathway2ec_idx = load_data(file_name=arg.pathway2ec_idx_name, load_path=arg.ospath, print_tag=False)
             pathway2ec_idx = list(pathway2ec_idx)
             tmp = list(ec_dict.keys())
-            ec_dict = dict((idx, ec_dict[tmp.index(ec)])
-                           for idx, ec in enumerate(pathway2ec_idx))
+            ec_dict = dict((idx, ec_dict[tmp.index(ec)]) for idx, ec in enumerate(pathway2ec_idx))
             if arg.extract_pf:
                 X, sample_ids = parse_files(ec_dict=ec_dict, input_folder=arg.dsfolder, rsfolder=arg.rsfolder,
                                             rspath=arg.rspath, num_jobs=arg.num_jobs)
@@ -332,12 +323,10 @@ def __train(arg):
                                     tag='heterogeneous information network',
                                     print_tag=False)
                     # get pathway2ec mapping
-                    node2idx_pathway2ec = [node[0]
-                                           for node in hin.nodes(data=True)]
+                    node2idx_pathway2ec = [node[0] for node in hin.nodes(data=True)]
                     del hin
                     print('\t>> Loading path2vec_features file...')
-                    path2vec_features = np.load(
-                        file=os.path.join(arg.mdpath, arg.features_name))
+                    path2vec_features = np.load(file=os.path.join(arg.ospath, arg.features_name))
                     __build_features(X=X, pathwat_dict=pathway_dict, ec_dict=ec_dict,
                                      labels_components=labels_components,
                                      node2idx_pathway2ec=node2idx_pathway2ec,
@@ -358,8 +347,7 @@ def __train(arg):
         centroids = None
 
         # load model
-        model = load_data(file_name=arg.model_name + '.pkl',
-                          load_path=arg.mdpath, tag='mltS')
+        model = load_data(file_name=arg.model_name + '.pkl', load_path=arg.mdpath, tag='mltS')
 
         if model.learn_bags:
             bags_labels = load_data(file_name=arg.bags_labels, load_path=arg.dspath,
@@ -367,8 +355,7 @@ def __train(arg):
         if model.label_uncertainty_type == "dependent":
             # TODO: uncomment below
             # label_features = load_data(file_name=arg.features_name, load_path=arg.dspath, tag="features")
-            label_features = np.load(
-                file=os.path.join(arg.dspath, arg.features_name))
+            label_features = np.load(file=os.path.join(arg.dspath, arg.features_name))
             label_features = label_features[label_features.files[0]]
             centroids = np.load(file=os.path.join(arg.dspath, arg.centroids))
             centroids = centroids[centroids.files[0]]
@@ -408,13 +395,11 @@ def __train(arg):
                               batch_size=arg.batch, num_jobs=arg.num_jobs, rsfolder=arg.rsfolder, rspath=arg.rspath,
                               dspath=arg.dspath, file_name=arg.file_name)
         else:
-            print('\t>> Storing predictions (label index) to: {0:s}'.format(
-                arg.file_name + '_y.pkl'))
+            print('\t>> Storing predictions (label index) to: {0:s}'.format(arg.file_name + '_y.pkl'))
             save_data(data=y_pred, file_name=arg.file_name + "_y.pkl", save_path=arg.dspath,
                       mode="wb", print_tag=False)
             if arg.pred_bags:
-                print('\t>> Storing predictions (bag index) to: {0:s}'.format(
-                    arg.file_name + '_yBags.pkl'))
+                print('\t>> Storing predictions (bag index) to: {0:s}'.format(arg.file_name + '_yBags.pkl'))
                 save_data(data=y_pred_Bags, file_name=arg.file_name + "_yBags.pkl", save_path=arg.dspath,
                           mode="wb", print_tag=False)
 

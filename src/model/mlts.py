@@ -539,7 +539,7 @@ class mltS:
         desc = '  \t\t>> Predictive uncertainty step...'
         print(desc)
         logger.info(desc)
-        parallel = Parallel(n_jobs=self.num_jobs,
+        parallel = Parallel(n_jobs=self.num_jobs, prefer="threads",
                             verbose=max(0, self.verbose - 1))
         if self.acquisition_type == "entropy":
             models_entropy = np.array(
@@ -723,7 +723,7 @@ class mltS:
         prob = list()
         samples_idx = list()
         current_progress = 0
-        parallel = Parallel(n_jobs=self.num_jobs,
+        parallel = Parallel(n_jobs=self.num_jobs, prefer="threads",
                             verbose=max(0, self.verbose - 1))
         for model_idx in np.arange(self.num_models):
             samples = model_sample_idx[model_idx]
@@ -1344,7 +1344,7 @@ class mltS:
         print('  \t\t<<<------------<<<------------<<<')
         print('  \t\t>> Feed-Backward step...')
         logger.info('\t\t>> Feed-Backward step...')
-        parallel = Parallel(n_jobs=1, verbose=max(0, self.verbose - 1))
+        parallel = Parallel(n_jobs=self.num_jobs, prefer="threads", verbose=max(0, self.verbose - 1))
         tmp_idx = np.unique(samples_idx)
         list_batches = np.arange(start=0, stop=len(tmp_idx), step=self.batch)
 
@@ -1735,7 +1735,7 @@ class mltS:
         # properties of dataset
         num_samples = X.shape[0]
         X = X.toarray()
-        parallel = Parallel(n_jobs=self.num_jobs,
+        parallel = Parallel(n_jobs=self.num_jobs, prefer="threads",
                             verbose=max(0, self.verbose - 1))
 
         if self.fit_intercept:
@@ -2092,8 +2092,7 @@ class mltS:
             S = None
             if self.corr_bag_sim or self.corr_label_sim or self.corr_input_sim:
                 S = self.S[ss_cost[:, None], ss_cost]
-            new_cost = self.__total_cost(
-                X=X[ss_cost], y=y, y_Bag=y_Bag, S=S, sample_idx=ss_cost)
+            new_cost = self.__total_cost(X=X[ss_cost], y=y, y_Bag=y_Bag, S=S, sample_idx=ss_cost)
 
             print('\t\t  ## Epoch {0} took {1} seconds...'.format(
                 epoch, round(end_epoch - start_epoch, 3)))
@@ -2354,7 +2353,7 @@ class mltS:
             (num_models, X.shape[0], self.num_labels)) + EPSILON
         current_progress = 0
         total_progress = num_models * len(list_batches)
-        parallel = Parallel(n_jobs=self.num_jobs,
+        parallel = Parallel(n_jobs=self.num_jobs, prefer="threads",
                             verbose=max(0, self.verbose - 1))
         for model_idx in np.arange(num_models):
             results = parallel(delayed(self.__predict)(X[batch:batch + self.batch],

@@ -1,5 +1,5 @@
 __author__ = "Abdurrahman M. A. Basher"
-__date__ = '21/11/2020'
+__date__ = '08/12/2020'
 __copyright__ = "Copyright 2020, The Hallam Lab"
 __license__ = "GPL"
 __version__ = "1.0"
@@ -77,9 +77,6 @@ def __internal_args(parse_args):
     arg.source_name = parse_args.source_name
     arg.X_trust_name = parse_args.X_trust_name
     arg.y_trust_name = parse_args.y_trust_name
-    arg.yB_name = parse_args.yB_name
-    arg.bags_labels = parse_args.bags_labels
-    arg.centroids = parse_args.centroids
     arg.similarity_name = parse_args.similarity_name
     arg.vocab_name = parse_args.vocab_name
     arg.file_name = parse_args.file_name
@@ -101,7 +98,6 @@ def __internal_args(parse_args):
     ###***************************        Training arguments        ***************************###
 
     arg.train = parse_args.train
-    arg.train_labels = parse_args.train_labels
     arg.fit_intercept = parse_args.fit_intercept
     arg.train_selected_sample = parse_args.train_selected_sample
     arg.ssample_input_size = parse_args.ssample_input_size
@@ -109,22 +105,12 @@ def __internal_args(parse_args):
     arg.ssample_label_size = parse_args.ssample_label_size
     arg.calc_subsample_size = parse_args.calc_subsample_size
     arg.calc_label_cost = parse_args.calc_label_cost
-    arg.calc_bag_cost = parse_args.calc_bag_cost
     arg.calc_total_cost = parse_args.calc_total_cost
-    arg.label_bag_sim = parse_args.label_bag_sim
     arg.label_closeness_sim = parse_args.label_closeness_sim
-    arg.corr_bag_sim = parse_args.corr_bag_sim
     arg.corr_label_sim = parse_args.corr_label_sim
     arg.corr_input_sim = parse_args.corr_input_sim
     arg.early_stop = parse_args.early_stop
     arg.loss_threshold = parse_args.loss_threshold
-
-    # apply active dataset subsampling
-    arg.calc_ads = parse_args.calc_ads
-    arg.label_uncertainty_type = parse_args.label_uncertainty_type
-    arg.ads_percent = parse_args.ads_percent
-    arg.acquisition_type = parse_args.acquisition_type
-    arg.top_k = parse_args.top_k
 
     # apply trusted reference datasets
     arg.use_trusted = parse_args.use_trusted
@@ -174,9 +160,6 @@ def __internal_args(parse_args):
         arg.build_features = False
     arg.top_k_taxa = parse_args.top_k_taxa
     arg.plot = parse_args.plot
-    arg.pred_bags = parse_args.pred_bags
-    arg.pred_labels = parse_args.pred_labels
-    arg.build_up = parse_args.build_up
     arg.meta_predict = parse_args.meta_predict
     arg.meta_adaptive = parse_args.meta_adaptive
     arg.meta_omega = parse_args.meta_omega
@@ -202,7 +185,7 @@ def parse_command_line():
     parser.add_argument('--random_state', default=12345, type=int, help='Random seed. (default value: 12345).')
     parser.add_argument('--num-jobs', type=int, default=2, help='Number of parallel workers. (default value: 2).')
     parser.add_argument('--num-models', default=3, type=int, help='Number of models to generate. (default value: 3).')
-    parser.add_argument('--batch', type=int, default=30, help='Batch size. (default value: 30).')
+    parser.add_argument('--batch', type=int, default=500, help='Batch size. (default value: 500).')
     parser.add_argument('--max-inner-iter', default=15, type=int,
                         help='Number of inner iteration for logistic regression. (default value: 15)')
     parser.add_argument('--num-epochs', type=int, default=3,
@@ -239,8 +222,6 @@ def parse_command_line():
                         help='The pathway2ec association indices file name. (default value: "pathway2ec_idx.pkl")')
     parser.add_argument('--features-name', type=str, default='path2vec_embeddings.npz',
                         help='The features file name. (default value: "path2vec_embeddings.npz")')
-    parser.add_argument('--centroids', type=str, default='biocyc_bag_centroid.npz',
-                        help='The bags centroids file name. (default value: "biocyc_bag_centroid.npz")')
     parser.add_argument('--hin-name', type=str, default='hin.pkl',
                         help='The hin file name. (default value: "hin.pkl")')
     parser.add_argument('--pi-name', type=str, default='trans_prob.pkl',
@@ -261,12 +242,8 @@ def parse_command_line():
                         help='The X trusted file name. (default value: "biocyc21_tier12_41_Xe.pkl")')
     parser.add_argument('--y-trust-name', type=str, default='biocyc21_tier12_41_y.pkl',
                         help='The y trusted file name. (default value: "biocyc21_tier12_41_y.pkl")')
-    parser.add_argument('--yB-name', type=str, default='biocyc21_tier3_9392_yB.pkl',
-                        help='The bags file name. (default value: "biocyc21_tier3_9392_yB.pkl")')
     parser.add_argument('--samples-ids', type=str, default='mltS_samples.pkl',
                         help='The samples ids file name. (default value: "mltS_samples.pkl")')
-    parser.add_argument('--bags-labels', type=str, default='biocyc_bag_pathway.pkl',
-                        help='The bags to labels grouping file name. (default value: "biocyc_bag_pathway.pkl")')
     parser.add_argument('--similarity-name', type=str, default='pathway_similarity_cos.pkl',
                         help='The labels similarity file name. (default value: "pathway_similarity_cos.pkl")')
     parser.add_argument('--vocab-name', type=str, default='vocab_biocyc.pkl',
@@ -297,8 +274,6 @@ def parse_command_line():
     ###***************************        Training arguments        ***************************###
     parser.add_argument('--train', action='store_true', default=False,
                         help='Whether to train the mltS model. (default value: False).')
-    parser.add_argument('--train-labels', action='store_true', default=False,
-                        help='Whether to train labels only. (default value: False).')
     parser.add_argument('--fit-intercept', action='store_false', default=True,
                         help='Whether the intercept should be estimated or not. (default value: True).')
     parser.add_argument('--train-selected-sample', action='store_true', default=False,
@@ -313,8 +288,6 @@ def parse_command_line():
                         help='Compute loss over selected samples. (default value: 50).')
     parser.add_argument("--calc-label-cost", action='store_false', default=True,
                         help="Compute label cost, i.e., cost of labels. (default value: True).")
-    parser.add_argument("--calc-bag-cost", action='store_true', default=False,
-                        help="Compute bag cost, i.e., cost of bags. (default value: False).")
     parser.add_argument("--calc-total-cost", action='store_true', default=False,
                         help="Compute total cost, i.e., cost of bags plus cost of labels."
                              " (default value: False).")
@@ -323,8 +296,6 @@ def parse_command_line():
     parser.add_argument('--label-closeness-sim', action='store_true', default=False,
                         help='Whether to apply closeness constraint of a label to other labels of a bag. '
                              '(default value: False).')
-    parser.add_argument('--corr-bag-sim', action='store_true', default=False,
-                        help='Whether to apply similarity constraint among bags. (default value: False).')
     parser.add_argument('--corr-label-sim', action='store_true', default=False,
                         help='Whether to apply similarity constraint among labels. (default value: False).')
     parser.add_argument('--corr-input-sim', action='store_true', default=False,
@@ -335,21 +306,6 @@ def parse_command_line():
     parser.add_argument("--loss-threshold", type=float, default=0.05,
                         help="A hyper-parameter for deciding the cutoff threshold of the differences "
                              "of loss between two consecutive rounds. (default value: 0.05).")
-    # apply active dataset subsampling
-    parser.add_argument('--calc-ads', action='store_true', default=False,
-                        help='Whether subsample dataset using ADS. (default value: False).')
-    parser.add_argument('--label-uncertainty-type', type=str, default='factorize',
-                        choices=['factorize', 'dependent'],
-                        help='The chosen model type. (default value: "factorize")')
-    parser.add_argument('--ads-percent', type=float, default=0.3,
-                        help='Active dataset subsampling size (in percentage). (default value: 0.3).')
-    parser.add_argument('--acquisition-type', type=str, default='psp',
-                        choices=['entropy', 'mutual', 'variation', 'psp'],
-                        help='The acquisition function for estimating the predictive uncertainty. '
-                             '(default value: "psp")')
-    parser.add_argument('--top-k', type=int, default=3,
-                        help='Top k labels to be considered for calculating the model '
-                             'for variation ratio acquisition function. (default value: 3).')
     # apply trusted reference datasets
     parser.add_argument('--use-trusted', action='store_true', default=False,
                         help='Train based on trusted data. (default value: False)')
@@ -378,16 +334,13 @@ def parse_command_line():
     parser.add_argument('--num-neighbors', type=int, default=10,
                         help='Number of neighbours used for partial labeling. '
                              '(default value: 10)')
-    # apply bags hyperparameters
-    parser.add_argument("--alpha-cent", type=float, default=16,
-                        help="A hyper-parameter for controlling bags centroids. (default value: 16).")
     parser.add_argument('--sigma', type=float, default=2,
                         help='Constant that scales the amount of Laplacian norm regularization '
                              'parameters. (default value: 2)')
     # apply regularization
-    parser.add_argument('--alpha-glob', type=float, default=0.1,
+    parser.add_argument('--alpha-glob', type=float, default=5,
                         help='Constant controlling trade-off between local and global weights. '
-                             '(default value: 0.1)')
+                             '(default value: 5)')
     parser.add_argument('--penalty', type=str, default='l21', choices=['l1', 'l2', 'elasticnet', 'l21'],
                         help='The penalty (aka regularization term) to be used. (default value: "l21")')
     parser.add_argument('--fuse-weight', action='store_true', default=False,
@@ -422,12 +375,6 @@ def parse_command_line():
     parser.add_argument('--predict', action='store_true', default=False,
                         help='Whether to predict bags_labels distribution from inputs using mltS. '
                              '(default value: False).')
-    parser.add_argument('--pred-bags', action='store_true', default=False,
-                        help='Whether to predict bags. (default value: False).')
-    parser.add_argument('--pred-labels', action='store_true', default=False,
-                        help='Whether to predict labels. (default value: False).')
-    parser.add_argument('--build-up', action='store_true', default=False,
-                        help='Whether to predict labels based on bags or not. (default value: False).')
     parser.add_argument('--meta-predict', action='store_true', default=False,
                         help='Whether to use global parameters for prediction. (default value: True).')
     parser.add_argument('--meta-adaptive', action='store_true', default=False,

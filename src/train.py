@@ -40,8 +40,10 @@ def __build_features(X, pathwat_dict, ec_dict, labels_components, node2idx_pathw
     abd = preprocessing.normalize(abd)
     print('\t>> Use pathway2vec EC features...')
     path2vec_features = path2vec_features[path2vec_features.files[0]]
-    path2vec_features = path2vec_features / np.linalg.norm(path2vec_features, axis=1)[:, np.newaxis]
-    ec_features = [idx for idx, v in ec_dict.items() if v in node2idx_pathway2ec]
+    path2vec_features = path2vec_features / \
+        np.linalg.norm(path2vec_features, axis=1)[:, np.newaxis]
+    ec_features = [idx for idx,
+                   v in ec_dict.items() if v in node2idx_pathway2ec]
     path2vec_features = path2vec_features[ec_features, :]
     ec_features = [np.mean(path2vec_features[row.rows[0]] * np.array(row.data[0])[:, None], axis=0)
                    for idx, row in enumerate(X)]
@@ -87,48 +89,55 @@ def __train(arg):
         print('\n{0})- Preprocess dataset...'.format(steps))
         steps = steps + 1
         print('\t>> Loading files...')
-        X = load_data(file_name=arg.X_name, load_path=arg.dspath, tag="instances")
+        X = load_data(file_name=arg.X_name,
+                      load_path=arg.dspath, tag="instances")
         X = X[:, :arg.cutting_point]
 
         # load a biocyc file
-        data_object = load_data(file_name=arg.object_name, load_path=arg.ospath, tag='the biocyc object')
+        data_object = load_data(file_name=arg.object_name,
+                                load_path=arg.ospath, tag='the biocyc object')
         ec_dict = data_object["ec_id"]
         pathway_dict = data_object["pathway_id"]
         del data_object
-
         pathway_dict = dict((idx, id) for id, idx in pathway_dict.items())
         ec_dict = dict((idx, id) for id, idx in ec_dict.items())
-        labels_components = load_data(file_name=arg.pathway2ec_name, load_path=arg.ospath, tag='M')
+        labels_components = load_data(
+            file_name=arg.pathway2ec_name, load_path=arg.ospath, tag='M')
         print('\t>> Loading label to component mapping file object...')
-        pathway2ec_idx = load_data(file_name=arg.pathway2ec_idx_name, load_path=arg.ospath, print_tag=False)
+        pathway2ec_idx = load_data(
+            file_name=arg.pathway2ec_idx_name, load_path=arg.ospath, print_tag=False)
         pathway2ec_idx = list(pathway2ec_idx)
         tmp = list(ec_dict.keys())
-        ec_dict = dict((idx, ec_dict[tmp.index(ec)]) for idx, ec in enumerate(pathway2ec_idx))
+        ec_dict = dict((idx, ec_dict[tmp.index(ec)])
+                       for idx, ec in enumerate(pathway2ec_idx))
 
         # load path2vec features
-        path2vec_features = np.load(file=os.path.join(arg.ospath, arg.features_name))
+        path2vec_features = np.load(
+            file=os.path.join(arg.mdpath, arg.features_name))
 
         # load a hin file
-        hin = load_data(file_name=arg.hin_name, load_path=arg.ospath, tag='heterogeneous information network')
+        hin = load_data(file_name=arg.hin_name, load_path=arg.ospath,
+                        tag='heterogeneous information network')
         # get pathway2ec mapping
         node2idx_pathway2ec = [node[0] for node in hin.nodes(data=True)]
         del hin
 
-        # build transition probability
-        pi = load_data(file_name=arg.pi_name, load_path=arg.ospath, tag='the hin distribution object')
-        tmp_ecs = [node[1]['mapped_idx'] for node in pi.nodes(data=True) if node[1]['idx'] in ec_dict and node[1]['type'] == 'E']
-        tmp_pathways = [node[1]['mapped_idx'] for node in pi.nodes(data=True) if node[1]['type'] == 'T']
+        pi = load_data(file_name=arg.pi_name, load_path=arg.ospath,
+                       tag='the hin distribution object')
+        tmp_ecs = [node[1]['mapped_idx'] for node in pi.nodes(data=True) if
+                   node[1]['idx'] in ec_dict and node[1]['type'] == 'E']
+        tmp_pathways = [node[1]['mapped_idx']
+                        for node in pi.nodes(data=True) if node[1]['type'] == 'T']
         trans_idx = np.array(tmp_ecs + tmp_pathways)
         pi = pi.trans_prob[trans_idx[:, None], trans_idx]
         pi = pi / pi.sum(1)
         np.nan_to_num(pi, copy=False, nan=0.0, posinf=0.0, neginf=0.0)
         save_data(data=lil_matrix(pi), file_name="trans_prob.pkl", save_path=arg.ospath, mode="wb",
                   tag="transition probability")
-        
         __build_features(X=X, pathwat_dict=pathway_dict, ec_dict=ec_dict, labels_components=labels_components,
                          node2idx_pathway2ec=node2idx_pathway2ec, path2vec_features=path2vec_features,
                          file_name=arg.file_name, dspath=arg.dspath, batch_size=arg.batch, num_jobs=arg.num_jobs)
-        
+
     ##########################################################################################################
     ######################                       TRAIN USING mltS                       ######################
     ##########################################################################################################
@@ -146,19 +155,7 @@ def __train(arg):
             tmp = load_data(file_name=f, load_path=arg.dspath,
                             tag="y (" + str(arg.source_name[idx]) + ")")
             y.update({str(arg.source_name[idx]): tmp})
-        y_Bags = None
-        bags_labels = None
-        label_features = None
-        centroids = None
-        if not arg.train_labels:
-            y_Bags = load_data(file_name=arg.yB_name,
-                               load_path=arg.dspath, tag="B")
-            bags_labels = load_data(file_name=arg.bags_labels, load_path=arg.dspath,
-                                    tag="bags_labels with associated pathways")
-            label_features = load_data(
-                file_name=arg.features_name, load_path=arg.dspath, tag="features")
-            centroids = np.load(file=os.path.join(arg.dspath, arg.centroids))
-            centroids = centroids[centroids.files[0]]
+
         A = None
         if arg.fuse_weight:
             A = load_item_features(file_name=os.path.join(arg.ospath, arg.similarity_name),
@@ -170,8 +167,6 @@ def __train(arg):
                 samples_ids = np.array(samples_ids)
                 X = X[samples_ids, :]
                 y = y[samples_ids, :]
-                if not arg.train_labels:
-                    y_Bags = y_Bags[samples_ids, :]
             else:
                 print('\t\t No sample ids file is provided...')
 
@@ -193,12 +188,10 @@ def __train(arg):
                      fit_intercept=arg.fit_intercept, subsample_input_size=arg.ssample_input_size,
                      subsample_mini_input_size=arg.ssample_mini_input_size,
                      subsample_labels_size=arg.ssample_label_size, apply_peer=arg.apply_peer, beta_peer=arg.beta_peer,
-                     calc_ads=arg.calc_ads, ads_percent=arg.ads_percent, apply_trusted_loss=arg.apply_trusted_loss,
+                     apply_trusted_loss=arg.apply_trusted_loss,
                      cost_subsample_size=arg.calc_subsample_size, calc_label_cost=arg.calc_label_cost,
-                     calc_bag_cost=arg.calc_bag_cost, calc_total_cost=arg.calc_total_cost,
-                     label_uncertainty_type=arg.label_uncertainty_type, acquisition_type=arg.acquisition_type,
-                     top_k=arg.top_k, label_bag_sim=arg.label_bag_sim, label_closeness_sim=arg.label_closeness_sim,
-                     corr_bag_sim=arg.corr_bag_sim, corr_label_sim=arg.corr_label_sim,
+                     calc_total_cost=arg.calc_total_cost,
+                     label_closeness_sim=arg.label_closeness_sim, corr_label_sim=arg.corr_label_sim,
                      corr_input_sim=arg.corr_input_sim, decision_threshold=arg.decision_threshold,
                      apply_partial_label=arg.apply_partial_label,
                      use_trusted_partial_label=arg.use_trusted_partial_label, tau_partial=arg.tau_partial,
@@ -211,8 +204,7 @@ def __train(arg):
                      max_inner_iter=arg.max_inner_iter, num_epochs=arg.num_epochs, num_jobs=arg.num_jobs,
                      display_interval=arg.display_interval, shuffle=arg.shuffle, random_state=arg.random_state,
                      log_path=arg.logpath)
-        model.fit(X=X, y_dict=y, X_trust=X_trust, y_trust=y_trust, y_Bag=y_Bags, bags_labels=bags_labels,
-                  label_features=label_features, centroids=centroids, pi=pi, A=A, model_name=arg.model_name,
+        model.fit(X=X, y_dict=y, X_trust=X_trust, y_trust=y_trust, pi=pi, A=A, model_name=arg.model_name,
                   model_path=arg.mdpath, result_path=arg.rspath, display_params=display_params)
 
     ##########################################################################################################
@@ -229,49 +221,29 @@ def __train(arg):
         bags_labels = None
         label_features = None
         centroids = None
-        if not arg.pred_bags:
-            y = load_data(
-                file_name=arg.y_name[0], load_path=arg.dspath, tag="y")
-        if arg.pred_bags:
-            y_Bags = load_data(file_name=arg.yB_name,
-                               load_path=arg.dspath, tag="B")
+        y = load_data(file_name=arg.y_name[0], load_path=arg.dspath, tag="y")
 
         # load model
         model = load_data(file_name=arg.model_name + '.pkl',
                           load_path=arg.mdpath, tag='mltS')
 
-        if model.learn_bags:
-            bags_labels = load_data(file_name=arg.bags_labels, load_path=arg.dspath,
-                                    tag="bags_labels with associated pathways")
-        if model.label_uncertainty_type == "dependent":
-            label_features = load_data(
-                file_name=arg.features_name, load_path=arg.dspath, tag="features")
-            centroids = np.load(file=os.path.join(arg.dspath, arg.centroids))
-            centroids = centroids[centroids.files[0]]
-
         # labels prediction score
-        y_pred_Bags, y_pred = model.predict(X=X, bags_labels=bags_labels, label_features=label_features,
-                                            centroids=centroids, estimate_prob=arg.estimate_prob,
-                                            pred_bags=arg.pred_bags, pred_labels=arg.pred_labels, build_up=arg.build_up,
-                                            meta_predict=arg.meta_predict, meta_adaptive=arg.meta_adaptive,
-                                            meta_omega=arg.meta_omega, pref_model=arg.pref_model,
-                                            pref_rank=arg.pref_rank,
-                                            top_k_rank=arg.top_k_rank, subsample_labels_size=arg.ssample_label_size,
-                                            soft_voting=arg.soft_voting, apply_t_criterion=arg.apply_tcriterion,
-                                            adaptive_beta=arg.adaptive_beta, decision_threshold=arg.decision_threshold,
-                                            batch_size=arg.batch, num_jobs=arg.num_jobs)
+        y_pred = model.predict(X=X, estimate_prob=arg.estimate_prob,
+                               meta_predict=arg.meta_predict, meta_adaptive=arg.meta_adaptive,
+                               meta_omega=arg.meta_omega, pref_model=arg.pref_model,
+                               pref_rank=arg.pref_rank,
+                               top_k_rank=arg.top_k_rank, subsample_labels_size=arg.ssample_label_size,
+                               soft_voting=arg.soft_voting, apply_t_criterion=arg.apply_tcriterion,
+                               adaptive_beta=arg.adaptive_beta, decision_threshold=arg.decision_threshold,
+                               batch_size=arg.batch, num_jobs=arg.num_jobs)
 
         file_name = arg.file_name + '_scores.txt'
-        if arg.pred_bags:
-            score(y_true=y_Bags.toarray(), y_pred=y_pred_Bags.toarray(), item_lst=['biocyc_bags'],
-                  six_db=False, top_k=arg.psp_k, mode='w', file_name=file_name, save_path=arg.rspath)
-        if arg.pred_labels:
-            if arg.dsname == 'golden':
-                score(y_true=y.toarray(), y_pred=y_pred.toarray(), item_lst=[arg.dsname], six_db=True,
-                      top_k=arg.psp_k, mode='a', file_name=file_name, save_path=arg.rspath)
-            else:
-                score(y_true=y.toarray(), y_pred=y_pred.toarray(), item_lst=[arg.dsname], six_db=False,
-                      top_k=arg.psp_k, mode='a', file_name=file_name, save_path=arg.rspath)
+        if arg.dsname == 'golden':
+            score(y_true=y.toarray(), y_pred=y_pred.toarray(), item_lst=[arg.dsname], six_db=True,
+                  top_k=arg.psp_k, mode='a', file_name=file_name, save_path=arg.rspath)
+        else:
+            score(y_true=y.toarray(), y_pred=y_pred.toarray(), item_lst=[arg.dsname], six_db=False,
+                  top_k=arg.psp_k, mode='a', file_name=file_name, save_path=arg.rspath)
 
     ##########################################################################################################
     ######################                      PREDICT USING mltS                      ######################
@@ -293,12 +265,15 @@ def __train(arg):
             del data_object
             pathway_dict = dict((idx, id) for id, idx in pathway_dict.items())
             ec_dict = dict((idx, id) for id, idx in ec_dict.items())
-            labels_components = load_data(file_name=arg.pathway2ec_name, load_path=arg.ospath, tag='M')
+            labels_components = load_data(
+                file_name=arg.pathway2ec_name, load_path=arg.ospath, tag='M')
             print('\t>> Loading label to component mapping file object...')
-            pathway2ec_idx = load_data(file_name=arg.pathway2ec_idx_name, load_path=arg.ospath, print_tag=False)
+            pathway2ec_idx = load_data(
+                file_name=arg.pathway2ec_idx_name, load_path=arg.ospath, print_tag=False)
             pathway2ec_idx = list(pathway2ec_idx)
             tmp = list(ec_dict.keys())
-            ec_dict = dict((idx, ec_dict[tmp.index(ec)]) for idx, ec in enumerate(pathway2ec_idx))
+            ec_dict = dict((idx, ec_dict[tmp.index(ec)])
+                           for idx, ec in enumerate(pathway2ec_idx))
             if arg.extract_pf:
                 X, sample_ids = parse_files(ec_dict=ec_dict, input_folder=arg.dsfolder, rsfolder=arg.rsfolder,
                                             rspath=arg.rspath, num_jobs=arg.num_jobs)
@@ -314,10 +289,12 @@ def __train(arg):
                                     tag='heterogeneous information network',
                                     print_tag=False)
                     # get pathway2ec mapping
-                    node2idx_pathway2ec = [node[0] for node in hin.nodes(data=True)]
+                    node2idx_pathway2ec = [node[0]
+                                           for node in hin.nodes(data=True)]
                     del hin
                     print('\t>> Loading path2vec_features file...')
-                    path2vec_features = np.load(file=os.path.join(arg.ospath, arg.features_name))
+                    path2vec_features = np.load(
+                        file=os.path.join(arg.ospath, arg.features_name))
                     __build_features(X=X, pathwat_dict=pathway_dict, ec_dict=ec_dict,
                                      labels_components=labels_components,
                                      node2idx_pathway2ec=node2idx_pathway2ec,
@@ -333,50 +310,32 @@ def __train(arg):
             sample_ids = load_data(
                 file_name=arg.samples_ids, load_path=arg.dspath, tag="samples ids")
         tmp = lil_matrix.copy(X)
-        bags_labels = None
-        label_features = None
-        centroids = None
 
         # load model
-        model = load_data(file_name=arg.model_name + '.pkl', load_path=arg.mdpath, tag='mltS')
-
-        if model.learn_bags:
-            bags_labels = load_data(file_name=arg.bags_labels, load_path=arg.dspath,
-                                    tag="bags_labels with associated pathways")
-        if model.label_uncertainty_type == "dependent":
-            # TODO: uncomment below
-            # label_features = load_data(file_name=arg.features_name, load_path=arg.dspath, tag="features")
-            label_features = np.load(file=os.path.join(arg.dspath, arg.features_name))
-            label_features = label_features[label_features.files[0]]
-            centroids = np.load(file=os.path.join(arg.dspath, arg.centroids))
-            centroids = centroids[centroids.files[0]]
+        model = load_data(file_name=arg.model_name + '.pkl',
+                          load_path=arg.mdpath, tag='mltS')
 
         # predict
-        y_pred_Bags, y_pred = model.predict(X=X, bags_labels=bags_labels, label_features=label_features,
-                                            centroids=centroids, estimate_prob=False,
-                                            pred_bags=arg.pred_bags, pred_labels=arg.pred_labels, build_up=arg.build_up,
-                                            meta_predict=arg.meta_predict, meta_adaptive=arg.meta_adaptive,
-                                            meta_omega=arg.meta_omega, pref_model=arg.pref_model,
-                                            pref_rank=arg.pref_rank,
-                                            top_k_rank=arg.top_k_rank, subsample_labels_size=arg.ssample_label_size,
-                                            soft_voting=arg.soft_voting, apply_t_criterion=arg.apply_tcriterion,
-                                            adaptive_beta=arg.adaptive_beta, decision_threshold=arg.decision_threshold,
-                                            batch_size=arg.batch, num_jobs=arg.num_jobs)
+        y_pred = model.predict(X=X, estimate_prob=False,
+                               meta_predict=arg.meta_predict, meta_adaptive=arg.meta_adaptive,
+                               meta_omega=arg.meta_omega, pref_model=arg.pref_model,
+                               pref_rank=arg.pref_rank,
+                               top_k_rank=arg.top_k_rank, subsample_labels_size=arg.ssample_label_size,
+                               soft_voting=arg.soft_voting, apply_t_criterion=arg.apply_tcriterion,
+                               adaptive_beta=arg.adaptive_beta, decision_threshold=arg.decision_threshold,
+                               batch_size=arg.batch, num_jobs=arg.num_jobs)
         # labels prediction score
-        y_pred_Bags_score, y_pred_score = model.predict(X=X, bags_labels=bags_labels, label_features=label_features,
-                                                        centroids=centroids, estimate_prob=True,
-                                                        pred_bags=arg.pred_bags, pred_labels=arg.pred_labels,
-                                                        build_up=arg.build_up,
-                                                        meta_predict=arg.meta_predict, meta_adaptive=arg.meta_adaptive,
-                                                        meta_omega=arg.meta_omega, pref_model=arg.pref_model,
-                                                        pref_rank=arg.pref_rank,
-                                                        top_k_rank=arg.top_k_rank,
-                                                        subsample_labels_size=arg.ssample_label_size,
-                                                        soft_voting=arg.soft_voting,
-                                                        apply_t_criterion=arg.apply_tcriterion,
-                                                        adaptive_beta=arg.adaptive_beta,
-                                                        decision_threshold=arg.decision_threshold,
-                                                        batch_size=arg.batch, num_jobs=arg.num_jobs)
+        y_pred_score = model.predict(X=X, estimate_prob=True,
+                                     meta_predict=arg.meta_predict, meta_adaptive=arg.meta_adaptive,
+                                     meta_omega=arg.meta_omega, pref_model=arg.pref_model,
+                                     pref_rank=arg.pref_rank,
+                                     top_k_rank=arg.top_k_rank,
+                                     subsample_labels_size=arg.ssample_label_size,
+                                     soft_voting=arg.soft_voting,
+                                     apply_t_criterion=arg.apply_tcriterion,
+                                     adaptive_beta=arg.adaptive_beta,
+                                     decision_threshold=arg.decision_threshold,
+                                     batch_size=arg.batch, num_jobs=arg.num_jobs)
         if arg.pathway_report:
             print('\t>> Synthesizing pathway reports...')
             X = tmp
@@ -386,14 +345,10 @@ def __train(arg):
                               batch_size=arg.batch, num_jobs=arg.num_jobs, rsfolder=arg.rsfolder, rspath=arg.rspath,
                               dspath=arg.dspath, file_name=arg.file_name)
         else:
-            print('\t>> Storing predictions (label index) to: {0:s}'.format(arg.file_name + '_y.pkl'))
+            print('\t>> Storing predictions (label index) to: {0:s}'.format(
+                arg.file_name + '_y.pkl'))
             save_data(data=y_pred, file_name=arg.file_name + "_y.pkl", save_path=arg.dspath,
                       mode="wb", print_tag=False)
-            if arg.pred_bags:
-                print('\t>> Storing predictions (bag index) to: {0:s}'.format(arg.file_name + '_yBags.pkl'))
-                save_data(data=y_pred_Bags, file_name=arg.file_name + "_yBags.pkl", save_path=arg.dspath,
-                          mode="wb", print_tag=False)
-
 
 def train(arg):
     try:

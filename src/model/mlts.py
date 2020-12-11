@@ -500,7 +500,7 @@ class mltS:
         if trusted:
             loss = np.mean(-(y_trust.toarray() * np.log(prob_label + LOG_EPSILON) + (1 - y_trust.toarray()) * np.log(
                 1 - prob_label + LOG_EPSILON)),
-                axis=0)
+                           axis=0)
         else:
             loss = np.mean(-(y.toarray() * np.log(prob_label + LOG_EPSILON) + (1 - y.toarray()) * np.log(
                 1 - prob_label + LOG_EPSILON)), axis=0)
@@ -521,13 +521,13 @@ class mltS:
                 print(desc, end="\r")
 
             tmp = self.beta_source * \
-                np.power(omega.T.dot(omega) / self.num_models, -
-                         0.5) * (omega / self.num_models)
+                  np.power(omega.T.dot(omega) / self.num_models, -
+                  0.5) * (omega / self.num_models)
             omega = mean_discrepancy + tmp
             omega = hist_omega - learning_rate * omega
             new_cost = self.beta_source * \
-                np.sqrt(
-                    np.sum(np.square(omega[:, np.newaxis]) * (1 / self.num_models)))
+                       np.sqrt(
+                           np.sum(np.square(omega[:, np.newaxis]) * (1 / self.num_models)))
             new_cost += 2 * np.sum(omega * mean_discrepancy)
             hist_omega = self.__softmax(X=omega)
             if new_cost < old_cost:
@@ -570,7 +570,7 @@ class mltS:
                 if M_1 == 0:
                     if self.use_trusted:
                         tmp = self.labels_confidence[model_idx][label_idx] + \
-                            EPSILON_BERN
+                              EPSILON_BERN
                     else:
                         tmp = np.random.choice(2)
                     if tmp > 1:
@@ -579,18 +579,18 @@ class mltS:
                     if M_2 == 1:
                         # gradient of Theta^path = Theta^path_old + learning_type * gradient value of Theta^path
                         tmp = self.beta_peer * \
-                            self.coef_label_input[model_idx][label_idx]
+                              self.coef_label_input[model_idx][label_idx]
                         tmp += (1 - self.beta_peer) * \
-                            self.coef_label_input_glob[label_idx]
+                               self.coef_label_input_glob[label_idx]
                         # tmp += -1 * (self.coef_label_input_glob[label_idx] - self.coef_label_input[model_idx][label_idx])
                         # tmp = self.coef_label_input[model_idx][label_idx] - tmp * learning_rate
                         self.coef_label_input[model_idx][label_idx] = self.__check_bounds(
                             tmp)
                         if self.fit_intercept:
                             tmp = self.beta_peer * \
-                                self.intercept_label_input[model_idx][label_idx]
+                                  self.intercept_label_input[model_idx][label_idx]
                             tmp += (1 - self.beta_peer) * \
-                                self.intercept_label_input_glob[label_idx]
+                                   self.intercept_label_input_glob[label_idx]
                             # tmp += -1 * (self.intercept_label_input_glob[label_idx] - self.intercept_label_input[model_idx][label_idx])
                             # tmp = self.intercept_label_input[model_idx][label_idx] - tmp * learning_rate
                             self.intercept_label_input[model_idx][label_idx] = tmp
@@ -614,16 +614,16 @@ class mltS:
                 del logit, coef_intercept_label
                 if self.fit_intercept:
                     self.coef_label_input[model_idx][label_idx] = self.coef_label_input[model_idx][
-                        label_idx] - learning_rate * coef[1:]
+                                                                      label_idx] - learning_rate * coef[1:]
                     self.intercept_label_input[model_idx][label_idx] = coef[0]
                 else:
                     self.coef_label_input[model_idx][label_idx] = self.coef_label_input[model_idx][
-                        label_idx] - learning_rate * coef
+                                                                      label_idx] - learning_rate * coef
                 if self.penalty != "l21":
                     l1 = self.l1_ratio * \
-                        np.sign(self.coef_label_input[model_idx][label_idx])
+                         np.sign(self.coef_label_input[model_idx][label_idx])
                     l2 = (1 - self.l1_ratio) * 2 * \
-                        self.coef_label_input[model_idx][label_idx]
+                         self.coef_label_input[model_idx][label_idx]
                     if self.penalty == "elasticnet":
                         gradient += self.alpha_elastic * (l1 + l2)
                     if self.penalty == "l1":
@@ -654,18 +654,18 @@ class mltS:
             # compute the constraint lambda_5 * D_Theta^path * Theta^path
             if self.penalty == "l21":
                 gradient += self.lam_5 * \
-                    self.__grad_l21_norm(
-                        M=self.coef_label_input[model_idx][label_idx])
+                            self.__grad_l21_norm(
+                                M=self.coef_label_input[model_idx][label_idx])
 
             # gradient of Theta^path = Theta^path_old + learning_type * gradient value of Theta^path
             tmp = self.coef_label_input[model_idx][label_idx] - \
-                learning_rate * gradient
+                  learning_rate * gradient
             self.coef_label_input[model_idx][label_idx] = self.__check_bounds(
                 tmp)
 
     def __optimize_s(self, X, y, S, learning_rate, batch_idx, batch, current_progress, total_progress):
         desc = '\t\t\t--> Optimizing {0}: {1:.2f}%...'.format("S", (
-            (current_progress + batch_idx + 1) / total_progress) * 100)
+                (current_progress + batch_idx + 1) / total_progress) * 100)
         if (current_progress + batch_idx + 1) != total_progress:
             print(desc, end="\r")
         if (current_progress + batch_idx + 1) == total_progress:
@@ -694,11 +694,11 @@ class mltS:
         i_lower = np.tril_indices(num_samples, -1)
         S[i_lower] = S.T[i_lower]
         self.S[batch:batch + self.batch, batch:batch +
-               self.batch] = lil_matrix(S) / self.num_models
+                                               self.batch] = lil_matrix(S) / self.num_models
 
     def __optimize_pi(self, X, y, batch_idx, current_progress, total_progress):
         desc = '\t\t\t--> Optimizing {0}: {1:.2f}%...'.format("pi", (
-            (current_progress + batch_idx + 1) / total_progress) * 100)
+                (current_progress + batch_idx + 1) / total_progress) * 100)
         if (current_progress + batch_idx + 1) != total_progress:
             print(desc, end="\r")
         if (current_progress + batch_idx + 1) == total_progress:
@@ -767,12 +767,12 @@ class mltS:
 
         count = 1
         current_progress += batch_idx * \
-            (model_idx + 1) * len(labels) * max_inner_iter
+                            (model_idx + 1) * len(labels) * max_inner_iter
         for i in np.arange(max_inner_iter):
             for label_idx in labels:
                 desc = '\t\t\t--> Optimizing {0}: {1:.2f}%...'.format("Global's parameters",
                                                                       ((
-                                                                          current_progress + count) / total_progress) * 100)
+                                                                               current_progress + count) / total_progress) * 100)
                 if total_progress == current_progress + count:
                     print(desc)
                 else:
@@ -799,27 +799,27 @@ class mltS:
                     if self.fit_intercept:
                         if self.use_trusted:
                             self.coef_label_input_glob[label_idx] = self.coef_label_input_glob[
-                                label_idx] - learning_rate * coef[1:] * \
-                                self.labels_confidence[model_idx][
-                                label_idx]
+                                                                        label_idx] - learning_rate * coef[1:] * \
+                                                                    self.labels_confidence[model_idx][
+                                                                        label_idx]
                         else:
                             self.coef_label_input_glob[label_idx] = self.coef_label_input_glob[
-                                label_idx] - learning_rate * coef[1:]
+                                                                        label_idx] - learning_rate * coef[1:]
                         self.intercept_label_input_glob[label_idx] = coef[0]
                     else:
                         if self.use_trusted:
                             self.coef_label_input_glob[label_idx] = self.coef_label_input_glob[
-                                label_idx] - learning_rate * coef * \
-                                self.labels_confidence[model_idx][
-                                label_idx]
+                                                                        label_idx] - learning_rate * coef * \
+                                                                    self.labels_confidence[model_idx][
+                                                                        label_idx]
                         else:
                             self.coef_label_input_glob[label_idx] = self.coef_label_input_glob[
-                                label_idx] - learning_rate * coef
+                                                                        label_idx] - learning_rate * coef
                     if self.penalty != "l21":
                         l1 = self.l1_ratio * \
-                            np.sign(self.coef_label_input_glob[label_idx])
+                             np.sign(self.coef_label_input_glob[label_idx])
                         l2 = (1 - self.l1_ratio) * 2 * \
-                            self.coef_label_input_glob[label_idx]
+                             self.coef_label_input_glob[label_idx]
                         if self.penalty == "elasticnet":
                             gradient += self.alpha_elastic * (l1 + l2)
                         if self.penalty == "l1":
@@ -839,7 +839,7 @@ class mltS:
                         self.intercept_label_input_glob[label_idx] = intercept
 
                 dist_coef = -1 * self.alpha_glob * (
-                    self.coef_label_input[model_idx][label_idx] - self.coef_label_input_glob[label_idx])
+                        self.coef_label_input[model_idx][label_idx] - self.coef_label_input_glob[label_idx])
                 if self.use_trusted:
                     gradient += dist_coef * self.omega[model_idx]
                 else:
@@ -853,15 +853,15 @@ class mltS:
                     else:
                         intercept = intercept / self.num_models
                     self.intercept_label_input_glob[label_idx] = self.intercept_label_input_glob[
-                        label_idx] - learning_rate * intercept
+                                                                     label_idx] - learning_rate * intercept
 
                 if self.penalty == "l21":
                     gradient += self.lam_5 * \
-                        self.__grad_l21_norm(
-                            M=self.coef_label_input_glob[label_idx])
+                                self.__grad_l21_norm(
+                                    M=self.coef_label_input_glob[label_idx])
 
                 gradient = self.coef_label_input_glob[label_idx] - \
-                    learning_rate * gradient
+                           learning_rate * gradient
                 self.coef_label_input_glob[label_idx] = self.__check_bounds(
                     gradient)
 
@@ -908,14 +908,14 @@ class mltS:
 
                 loss_1 = parallel(delayed(self.__compute_loss)(X_tmp[batch:batch + self.batch],
                                                                y_tmp[batch:batch +
-                                                                     self.batch],
+                                                                           self.batch],
                                                                None, False, model_idx, batch_idx,
                                                                current_progress, total_progress)
                                   for batch_idx, batch in enumerate(list_batches))
                 current_progress += len(list_batches)
                 loss_2 = parallel(delayed(self.__compute_loss)(X_trust[batch:batch + self.batch], None,
                                                                y_trust[batch:batch +
-                                                                       self.batch],
+                                                                             self.batch],
                                                                True, model_idx, batch_idx,
                                                                current_progress, total_progress)
                                   for batch_idx, batch in enumerate(list_batches_trust))
@@ -967,16 +967,16 @@ class mltS:
             if self.corr_label_sim or self.corr_input_sim:
                 parallel(delayed(self.__optimize_theta_label)(X_tmp[batch:batch + self.batch],
                                                               y_tmp[batch:batch +
-                                                                    self.batch],
+                                                                          self.batch],
                                                               S[batch:batch + self.batch,
-                                                                batch:batch + self.batch],
+                                                              batch:batch + self.batch],
                                                               L, learning_rate, model_idx,
                                                               batch_idx, current_progress, total_progress)
                          for batch_idx, batch in enumerate(list_batches))
             else:
                 parallel(delayed(self.__optimize_theta_label)(X_tmp[batch:batch + self.batch],
                                                               y_tmp[batch:batch +
-                                                                    self.batch],
+                                                                          self.batch],
                                                               None, L, learning_rate, model_idx,
                                                               batch_idx, current_progress, total_progress)
                          for batch_idx, batch in enumerate(list_batches))
@@ -1011,7 +1011,7 @@ class mltS:
                 total_progress = len(list_batches) * self.num_models
                 parallel(delayed(self.__optimize_pi)(X_tmp[batch:batch + self.batch],
                                                      y_tmp[batch:batch +
-                                                           self.batch],
+                                                                 self.batch],
                                                      batch_idx, current_progress,
                                                      total_progress)
                          for batch_idx, batch in enumerate(list_batches))
@@ -1043,7 +1043,7 @@ class mltS:
             list_batches = np.arange(
                 start=0, stop=len(tmp_idx), step=self.batch)
             total_progress = len(list_batches) * \
-                self.num_models * num_labels * max_inner_iter
+                             self.num_models * num_labels * max_inner_iter
 
             if self.apply_partial_label and self.use_trusted_partial_label:
                 if self.estimate_graph:
@@ -1058,7 +1058,7 @@ class mltS:
                 y_trust_tmp = y_trust[tmp_trusted_idx]
                 parallel(delayed(self.__optimize_global)(X_tmp[batch:batch + self.batch],
                                                          y_tmp[batch:batch +
-                                                               self.batch],
+                                                                     self.batch],
                                                          X_trust_tmp, y_trust_tmp,
                                                          pi, learning_rate, model_idx, batch_idx,
                                                          current_progress, total_progress)
@@ -1066,13 +1066,13 @@ class mltS:
             else:
                 parallel(delayed(self.__optimize_global)(X_tmp[batch:batch + self.batch],
                                                          y_tmp[batch:batch +
-                                                               self.batch],
+                                                                     self.batch],
                                                          None, None, pi, learning_rate,
                                                          model_idx, batch_idx, current_progress,
                                                          total_progress)
                          for batch_idx, batch in enumerate(list_batches))
             current_progress = len(list_batches) * \
-                (model_idx + 1) * num_labels * max_inner_iter
+                               (model_idx + 1) * num_labels * max_inner_iter
 
         # optimize S
         if self.corr_label_sim or self.corr_input_sim:
@@ -1097,19 +1097,18 @@ class mltS:
                     start=0, stop=len(tmp_idx), step=self.batch)
                 total_progress = len(list_batches) * self.num_models
                 parallel(delayed(self.__optimize_s)(X_tmp[batch:batch + self.batch],
-                                                        y_tmp[batch:batch + self.batch], 
-                                                        S[batch:batch + self.batch,
-                                                            batch:batch + self.batch],
-                                                        learning_rate, batch_idx, batch, current_progress,
-                                                        total_progress)
-                             for batch_idx, batch in enumerate(list_batches))
+                                                    y_tmp[batch:batch + self.batch],
+                                                    S[batch:batch + self.batch,
+                                                    batch:batch + self.batch],
+                                                    learning_rate, batch_idx, batch, current_progress,
+                                                    total_progress)
+                         for batch_idx, batch in enumerate(list_batches))
                 current_progress = len(list_batches) * (model_idx + 1)
             print("\n", end="\r")
 
-
     def __cost_label(self, X, y, s_cost_x, model_idx, label_idx, use_glob, current_progress, total_progress):
         desc = '\t\t\t--> Calculating {0} cost: {1:.2f}%...'.format('label', (
-            ((current_progress + label_idx + 1) / total_progress) * 100))
+                ((current_progress + label_idx + 1) / total_progress) * 100))
         print(desc, end="\r")
         if use_glob:
             coef_intercept_label = self.coef_label_input_glob[label_idx]
@@ -1183,7 +1182,7 @@ class mltS:
                     # cost (lambda_4 / 2) * S_q,k ||y_q - y_k||_2^2
                     if self.corr_label_sim:
                         s_cost_y += self.lam_4 * \
-                            np.trace(np.dot(np.dot(y_tmp.T, L), y_tmp))
+                                    np.trace(np.dot(np.dot(y_tmp.T, L), y_tmp))
 
                         # cost 1/2 * S_q,k ||Theta^path X_q - Theta^path X_k||_2^2
                     if self.corr_input_sim:
@@ -1216,7 +1215,8 @@ class mltS:
         print("")
         return cost
 
-    def fit(self, X, y_dict, X_trust=None, y_trust=None, pi=None, A=None, model_name='mltS', model_path="../../model", result_path=".",
+    def fit(self, X, y_dict, X_trust=None, y_trust=None, pi=None, A=None, model_name='mltS', model_path="../../model",
+            result_path=".",
             display_params: bool = True):
         if X is None:
             raise Exception("Please provide a dataset.")
@@ -1371,7 +1371,6 @@ class mltS:
                     confidence_table_name = model_name + '_confidence.pkl'
                     model_file_name = model_name + '.pkl'
 
-
                     if self.corr_label_sim or self.corr_input_sim:
                         print(
                             '\t\t  --> Storing the mltS\'s S parameters to: {0:s}'.format(S_name))
@@ -1506,7 +1505,7 @@ class mltS:
         if source_model_idx != -1:
             model_idx = source_model_idx
         prob_label = self.__label_prob(X=X, labels=list(), model_idx=model_idx, transform=True,
-                                               meta_predict=meta_predict)
+                                       meta_predict=meta_predict)
         desc = '\t\t--> Computed {0:.4f}%...'.format(
             ((current_progress + batch_idx) / total_progress * 100))
         print(desc, end="\r")
@@ -1619,7 +1618,8 @@ class mltS:
 
         num_samples = X.shape[0]
         list_batches = np.arange(start=0, stop=num_samples, step=self.batch)
-        prob_label = self.__batch_predict(X=X, meta_predict=meta_predict, source_model_idx=source_model_idx, list_batches=list_batches)
+        prob_label = self.__batch_predict(X=X, meta_predict=meta_predict, source_model_idx=source_model_idx,
+                                          list_batches=list_batches)
 
         if apply_t_criterion and not pref_rank:
             maxval = np.max(prob_label, axis=1) * adaptive_beta
@@ -1628,11 +1628,11 @@ class mltS:
 
         if not estimate_prob:
             if pref_rank:
-                    labels_idx = np.argsort(-prob_label)[:, :top_k_rank]
-                    for idx in np.arange(prob_label.shape[0]):
-                        prob_label[idx, labels_idx[idx]] = 1
+                labels_idx = np.argsort(-prob_label)[:, :top_k_rank]
+                for idx in np.arange(prob_label.shape[0]):
+                    prob_label[idx, labels_idx[idx]] = 1
             else:
-                    prob_label[prob_label >= self.decision_threshold] = 1
+                prob_label[prob_label >= self.decision_threshold] = 1
             prob_label[prob_label != 1] = 0
         return lil_matrix(prob_label)
 
@@ -1681,7 +1681,8 @@ class mltS:
 
         num_samples = X.shape[0]
         list_batches = np.arange(start=0, stop=num_samples, step=self.batch)
-        prob_label = self.__batch_predict(X=X, meta_predict=meta_predict, source_model_idx=source_model_idx, list_batches=list_batches)
+        prob_label = self.__batch_predict(X=X, meta_predict=meta_predict, source_model_idx=source_model_idx,
+                                          list_batches=list_batches)
         prob_label = lil_matrix(prob_label)
         F, W = self.__graph_construction(X, pi)
         F = F.multiply(prob_label)

@@ -9,10 +9,11 @@ import time
 import traceback
 
 import numpy as np
-from model.mlts import mltS
+from joblib import Parallel, delayed
 from scipy.sparse import lil_matrix, hstack
 from sklearn import preprocessing
-from joblib import Parallel, delayed
+
+from model.mlts import mltS
 from utility.access_file import load_data, load_item_features, save_data
 from utility.model_utils import score, synthesize_report, compute_abd_cov
 from utility.parse_input import parse_files
@@ -41,9 +42,9 @@ def __build_features(X, pathwat_dict, ec_dict, labels_components, node2idx_pathw
     print('\t>> Use pathway2vec EC features...')
     path2vec_features = path2vec_features[path2vec_features.files[0]]
     path2vec_features = path2vec_features / \
-        np.linalg.norm(path2vec_features, axis=1)[:, np.newaxis]
+                        np.linalg.norm(path2vec_features, axis=1)[:, np.newaxis]
     ec_features = [idx for idx,
-                   v in ec_dict.items() if v in node2idx_pathway2ec]
+                           v in ec_dict.items() if v in node2idx_pathway2ec]
     path2vec_features = path2vec_features[ec_features, :]
     ec_features = [np.mean(path2vec_features[row.rows[0]] * np.array(row.data[0])[:, None], axis=0)
                    for idx, row in enumerate(X)]
@@ -349,6 +350,7 @@ def __train(arg):
                 arg.file_name + '_y.pkl'))
             save_data(data=y_pred, file_name=arg.file_name + "_y.pkl", save_path=arg.dspath,
                       mode="wb", print_tag=False)
+
 
 def train(arg):
     try:

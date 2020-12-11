@@ -193,7 +193,7 @@ def parse_command_line():
     parser.add_argument('--shuffle', action='store_false', default=True,
                         help='Whether or not the training data should be shuffled after each epoch. '
                              '(default value: True).')
-    
+
     ###***************************          Path arguments          ***************************###
     parser.add_argument('--ospath', type=str, default=fph.OBJECT_PATH,
                         help='The path to the data object that contains extracted '
@@ -212,7 +212,7 @@ def parse_command_line():
                         help='The result folder name. The default is set to Prediction_mltS.')
     parser.add_argument('--logpath', type=str, default=fph.LOG_PATH,
                         help='The path to the log directory.')
-    
+
     ###***************************          File arguments          ***************************###
     parser.add_argument('--object-name', type=str, default='biocyc.pkl',
                         help='The biocyc file name. (default value: "biocyc.pkl")')
@@ -236,8 +236,9 @@ def parse_command_line():
                         help="The y file name. (default value: ['biocyc21_tier3_9392_y.pkl', "
                              "'biocyc21_tier3_9392_minpath_y.pkl', 'biocyc21_tier3_9392_mllr_y.pkl', "
                              "'biocyc21_tier3_9392_triumpf_y.pkl', 'biocyc21_tier3_9392_pp_leads_y.pkl']).")
-    parser.add_argument("--source-name", nargs="+", type=str, default=['pathologic', 'minpath', 'mllr', 'triumpf', 'leads'],
-                        help="The y source name. (default value: ['pathologic', 'minpath', 'mllr', 'triumpf', 'leads']).") 
+    parser.add_argument("--source-name", nargs="+", type=str,
+                        default=['pathologic', 'minpath', 'mllr', 'triumpf', 'leads'],
+                        help="The y source name. (default value: ['pathologic', 'minpath', 'mllr', 'triumpf', 'leads']).")
     parser.add_argument('--X-trust-name', type=str, default='biocyc21_tier12_41_Xe.pkl',
                         help='The X trusted file name. (default value: "biocyc21_tier12_41_Xe.pkl")')
     parser.add_argument('--y-trust-name', type=str, default='biocyc21_tier12_41_y.pkl',

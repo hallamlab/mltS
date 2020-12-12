@@ -129,7 +129,6 @@ def __internal_args(parse_args):
     arg.num_neighbors = parse_args.num_neighbors
 
     # apply hyperparameters
-    arg.alpha_cent = parse_args.alpha_cent
     arg.sigma = parse_args.sigma
 
     # apply regularization

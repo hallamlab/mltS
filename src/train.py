@@ -183,7 +183,7 @@ def __train(arg):
             if os.path.exists(os.path.join(arg.ospath, arg.pi_name)):
                 pi = load_data(file_name=arg.pi_name,
                                load_path=arg.ospath, tag="transition probability")
-        model = mltS(alpha_cent=arg.alpha_cent, binarize_input_feature=arg.binarize_input_feature,
+        model = mltS(binarize_input_feature=arg.binarize_input_feature,
                      normalize_input_feature=arg.normalize_input_feature,
                      use_external_features=arg.use_external_features, cutting_point=arg.cutting_point,
                      fit_intercept=arg.fit_intercept, subsample_input_size=arg.ssample_input_size,

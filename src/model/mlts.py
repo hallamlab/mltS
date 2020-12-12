@@ -26,7 +26,7 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 class mltS:
-    def __init__(self, alpha_cent=16, binarize_input_feature=True, normalize_input_feature=False,
+    def __init__(self, binarize_input_feature=True, normalize_input_feature=False,
                  use_external_features=True, cutting_point=3650, fit_intercept=True, subsample_input_size=0.3,
                  subsample_mini_input_size=0.3, subsample_labels_size=50, apply_peer=True, beta_peer=0.75,
                  apply_trusted_loss=False, cost_subsample_size=100,
@@ -53,7 +53,6 @@ class mltS:
         self.cutting_point = cutting_point
         self.fit_intercept = fit_intercept
         self.decision_threshold = decision_threshold
-        self.alpha_cent = alpha_cent
         self.subsample_input_size = subsample_input_size
         self.subsample_mini_input_size = subsample_mini_input_size
         self.subsample_labels_size = subsample_labels_size
@@ -77,12 +76,10 @@ class mltS:
         self.kappa = kappa
         self.beta_source = beta_source
 
-        # compute cost for bags and labels
+        # compute cost for labels
         self.apply_trusted_loss = apply_trusted_loss
         self.cost_subsample_size = cost_subsample_size
         self.calc_label_cost = calc_label_cost
-        # if both costs: labels and bags are set to false
-        # then set inflect the bag cost to true
         if self.calc_label_cost is False:
             self.calc_label_cost = True
         self.calc_total_cost = calc_total_cost
@@ -141,8 +138,6 @@ class mltS:
                                                  'that are included in data? {0}'.format(self.use_external_features)})
         argdict.update({'cutting_point': 'The cutting point after which binarize '
                                          'operation is halted in data: {0}'.format(self.cutting_point)})
-        argdict.update(
-            {'alpha_cent': 'A hyper-parameter for controlling bags centroids: {0}'.format(self.alpha_cent)})
         argdict.update({'fit_intercept': 'Whether the intercept should be estimated '
                                          'or not? {0}'.format(self.fit_intercept)})
         argdict.update({'decision_threshold': 'The decision cutoff threshold: {0}'.format(
@@ -392,36 +387,6 @@ class mltS:
             X = lil_matrix(X)
         return X
 
-    def __model_label_factorize(self, X, labels, bags, prob_label, model_idx, transform):
-        num_samples = X.shape[0]
-        prob_bag = np.zeros((num_samples, self.num_bags)) + EPSILON
-        coef_intercept_bag = self.coef_bag_input[model_idx, bags]
-
-        if self.fit_intercept:
-            X = np.concatenate((np.ones((num_samples, 1)), X), axis=1)
-            coef_intercept_bag = np.hstack(
-                (self.intercept_bag_input[model_idx, bags], coef_intercept_bag))
-        tmp = self.__sigmoid(np.dot(X, coef_intercept_bag.T))
-        if transform:
-            return tmp
-        for label_idx, label in enumerate(labels):
-            bags_idx = np.nonzero(self.bags_labels[:, label])[0]
-            tmp_bags = [bags.index(b) for b in bags_idx]
-            if len(bags_idx) > 0:
-                prob_bag[:, bags_idx] += np.multiply(
-                    tmp[:, tmp_bags], prob_label[label_idx])
-        prob_bag = prob_bag / self.num_bags
-        return prob_bag
-
-    def __model_type(self, X, y, labels, bags, prob_label, model_idx, transform=False):
-        if self.label_uncertainty_type == "dependent":
-            prob = self.__model_label_dependent(y=y, labels=labels, bags=bags, prob_label=prob_label,
-                                                model_idx=model_idx)
-        else:
-            prob = self.__model_label_factorize(X=X, labels=labels, bags=bags, prob_label=prob_label,
-                                                model_idx=model_idx, transform=transform)
-        return prob
-
     def __label_prob(self, X, labels, model_idx=0, transform=False, meta_predict=False):
         if len(labels) == 0:
             labels = np.arange(self.num_labels)
@@ -442,21 +407,6 @@ class mltS:
             prob_label = np.mean(prob_label, axis=0)
         return prob_label
 
-    def __bag_prob(self, X, bags, model_idx, transform=False):
-        if not self.label_uncertainty_type == "factorize":
-            raise Exception(
-                "Fit this instance using 'factorize' option in the 'label_uncertainty_type'.")
-        if len(bags) == 0:
-            bags = np.arange(self.num_bags)
-        coef_intercept = self.coef_bag_input[model_idx][bags]
-        if self.fit_intercept:
-            coef_intercept = np.hstack(
-                (self.intercept_bag_input[model_idx][bags], coef_intercept))
-        prob_bag = self.__sigmoid(np.dot(X, coef_intercept.T))
-        if not transform:
-            prob_bag = np.mean(prob_bag, axis=0)
-        return prob_bag
-
     def __feed_forward(self, X, y, model_idx, batch_idx, current_progress, total_progress):
         X = X.toarray()
         y = y.toarray()
@@ -473,11 +423,7 @@ class mltS:
             labels = np.sort(labels)
 
         # compute probability of labels
-        transform = True
-        if self.learn_bags:
-            transform = False
-        prob = self.__label_prob(
-            X=X, labels=labels, model_idx=model_idx, transform=transform)
+        prob = self.__label_prob(X=X, labels=labels, model_idx=model_idx, transform=True)
 
         # compute probability of labels
         tmp = np.zeros((num_samples, self.num_labels)) + EPSILON
@@ -1140,7 +1086,7 @@ class mltS:
         return cost_label
 
     def __total_cost(self, X, y, S, sample_idx):
-        print('  \n\t\t>> Compute cost...')
+        print('  \t\t>> Compute cost...')
         logger.info('\t\t>> Compute cost...')
 
         # hyper-parameters
@@ -1634,9 +1580,9 @@ class mltS:
             else:
                 prob_label[prob_label >= self.decision_threshold] = 1
             prob_label[prob_label != 1] = 0
-        return lil_matrix(prob_label)
+        return lil_matrix(prob_bag), lil_matrix(prob_label)
 
-    def predict_partial_labels(self, X, y, pi, tau_partial=0.005, meta_predict=True, pref_model=None,
+    def predict_partial_labels(self, X, y, pi, tau_partial=0.005, build_up=True, meta_predict=True, pref_model=None,
                                soft_voting=False, decision_threshold=0.5, batch_size=30, num_jobs=1):
         if not self.is_fit:
             raise Exception("This instance is not fitted yet. Call 'fit' with "

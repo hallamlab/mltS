@@ -237,14 +237,14 @@ class mltS:
         return X
 
     def __init_variables(self, num_samples):
-
         self.coef_label_input = np.zeros(
             shape=(self.num_models, self.num_labels, self.input_feature_size))
-        self.intercept_label_input = np.zeros(
-            shape=(self.num_models, self.num_labels, 1))
         self.coef_label_input_glob = np.zeros(
             shape=(self.num_labels, self.input_feature_size))
-        self.intercept_label_input_glob = np.zeros(shape=(self.num_labels, 1))
+        if self.fit_intercept:
+            self.intercept_label_input = np.zeros(
+                shape=(self.num_models, self.num_labels, 1))
+            self.intercept_label_input_glob = np.zeros(shape=(self.num_labels, 1))
 
         # initialize a similarity matrix
         if self.corr_label_sim or self.corr_input_sim:
@@ -1245,10 +1245,7 @@ class mltS:
 
         print('\t>> Training mltS model...')
         logger.info('\t>> Training mltS model...')
-        selected_samples = list()
-        model_sample_idx = list()
         old_cost = np.inf
-        high_cost = 0.0
         timeref = time.time()
 
         for epoch in np.arange(start=1, stop=n_epochs):
@@ -1258,12 +1255,11 @@ class mltS:
             logger.info(desc)
 
             # shuffle dataset
-            if len(selected_samples) == 0:
-                sample_idx = self.__shffule(num_samples=num_samples)
-                X = X[sample_idx, :]
-                for idx, tmp in enumerate(y):
-                    y[idx] = y[idx][sample_idx, :]
-                del tmp
+            sample_idx = self.__shffule(num_samples=num_samples)
+            X = X[sample_idx, :]
+            for idx, tmp in enumerate(y):
+                y[idx] = y[idx][sample_idx, :]
+            del tmp
 
             if self.learning_type == "optimal":
                 # usual optimization technique

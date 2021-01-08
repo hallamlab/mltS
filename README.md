@@ -28,4 +28,4 @@ See tutorials on the [GitHub wiki](https://github.com/hallamlab/mltS/wiki) page 
 
 ## Contact
 
-For any inquiries, please contact: [arbasher@alumni.ubc.ca](mailto:arbasher@alumni.ubc.ca)
+For any inquiries, please contact: [arbasher@student.ubc.ca](mailto:arbasher@student.ubc.ca)

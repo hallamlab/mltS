@@ -1,10 +1,10 @@
-__author__ = "Abdurrahman M. A. Basher"
+__author__ = "Abdurrahman Abul-Basher"
 __date__ = '29/01/2021'
 __copyright__ = "Copyright 2020, The Hallam Lab"
 __license__ = "GPL"
 __version__ = "1.0"
-__maintainer__ = "Abdurrahman M. A. Basher"
-__email__ = "ar.basher@alumni.ubc.ca"
+__maintainer__ = "Abdurrahman Abul-Basher"
+__email__ = "arbasher@student.ubc.ca"
 __status__ = "Production"
 __description__ = "This file is the main entry to perform learning and prediction on dataset using mltS model."
 
